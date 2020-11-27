@@ -48,5 +48,5 @@ def onReceiveData(data):
         print('cannot find any active server')
 
 if __name__ == "__main__":
-    print(requests.get(url = "http://169.254.169.254/latest/meta-data/"))
+    print(requests.get(url = "http://169.254.169.254/latest/meta-data/").json())
     socketio.run(app, port=3000, host="0.0.0.0")
