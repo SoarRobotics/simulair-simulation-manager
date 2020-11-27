@@ -1,6 +1,8 @@
 from flask import  Flask, render_template, request, redirect
 from flask_socketio import SocketIO, emit
 import requests
+import awsGetters
+import boto3
 
 import numpy as np
 
@@ -47,6 +49,9 @@ def onReceiveData(data):
     else:
         print('cannot find any active server')
 
+
 if __name__ == "__main__":
-    print(requests.get(url = "http://169.254.169.254/latest/meta-data/").json())
+    instanceId = awsGetters.getInstanceId()
+    publicIp = awsGetters.getPublicIp()
+    print(awsGetters.getSimulation(instanceId))
     socketio.run(app, port=3000, host="0.0.0.0")
