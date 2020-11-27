@@ -1,5 +1,7 @@
 from flask import  Flask, render_template, request, redirect
 from flask_socketio import SocketIO, emit
+import requests
+
 import numpy as np
 
 app = Flask(__name__)
@@ -46,4 +48,5 @@ def onReceiveData(data):
         print('cannot find any active server')
 
 if __name__ == "__main__":
-    socketio.run(app, port=3000)
+    print(requests.get(url = "http://169.254.169.254/latest/meta-data/"))
+    socketio.run(app, port=3000, host="0.0.0.0")
