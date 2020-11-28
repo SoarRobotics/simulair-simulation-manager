@@ -12,8 +12,21 @@ def getPublicIp():
 
 def getSimulation(instance_id):
     table = dynamodb.Table('simulair_simulations')
-    return table.query(
-        ProjectionExpression="instanceId",
-        KeyConditionExpression=
-            Key('instanceId').eq(instance_id)
-    )
+    scan_kwargs = {
+        "FilterExpression" : Key('instanceId').eq(instance_id),
+        "ProjectionExpression" : "#id",
+        "ExpressionAttributeNames" : {"#id" : "_id"}
+    }
+
+    done = False
+    start_key = None
+    response = []
+    while not done:
+        if start_key:
+            scan_kwargs['ExclusiveStartKey'] = start_key
+        response.append(table.scan(**scan_kwargs))
+        start_key = response.get("LastEvaluatedKey", None)
+        done = start_key is None
+
+    return response
+
