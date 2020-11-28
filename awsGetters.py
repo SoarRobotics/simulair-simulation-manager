@@ -24,8 +24,9 @@ def getSimulation(instance_id):
     while not done:
         if start_key:
             scan_kwargs['ExclusiveStartKey'] = start_key
-        response.append(table.scan(**scan_kwargs))
-        start_key = response.get("LastEvaluatedKey", None)
+        temp_response = table.scan(**scan_kwargs)
+        start_key = temp_response.get("LastEvaluatedKey", None)
+        response += temp_response.get("Items", None)
         done = start_key is None
 
     return response
