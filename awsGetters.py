@@ -12,15 +12,8 @@ def getPublicIp():
 
 def getSimulation(instance_id):
     table = dynamodb.Table('simulair_simulations')
-    return table.scan(
-        ScanFilter =
-        {
-            'instanceId' : {
-                'AttributeValueList' :
-                    [
-                        'S' : instance_id
-                    ],
-                    'ComparisonOperator': 'EQ'
-            }
-        }
+    return table.query(
+        ProjectionExpression="instanceId",
+        KeyConditionExpression=
+            Key('instanceId').eq(instance_id)
     )

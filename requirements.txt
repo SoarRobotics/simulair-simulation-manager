@@ -2,4 +2,5 @@ Flask == 1.1.2
 Flask-SocketIO == 4.3.1
 numpy == 1.19.2
 eventlet==0.28.0
-
+boto3==1.16.25
+requests==2.25.0
