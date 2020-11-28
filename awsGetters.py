@@ -3,15 +3,15 @@ import boto3
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
-
+SIM_TABLE = 'simulair_simulations';
 def getInstanceId():
     return (requests.get("http://169.254.169.254/latest/meta-data/instance-id").text)
 
 def getPublicIp():
     return (requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").text)
 
-def getSimulation(instance_id):
-    table = dynamodb.Table('simulair_simulations')
+def getSimulationId(instance_id):
+    table = dynamodb.Table(SIM_TABLE)
     scan_kwargs = {
         "FilterExpression" : Key('instanceId').eq(instance_id),
         "ProjectionExpression" : "#id",
@@ -30,4 +30,45 @@ def getSimulation(instance_id):
         done = start_key is None
 
     return response
+
+def getSimulationInfo(_id):
+    table = dynamodb.Table(SIM_TABLE)
+
+    response = table.get_item(Key={
+        "_id": _id,
+    })
+    return response.get("Item", None)
+
+def setPublicIp(_id, ip):
+    table = dynamodb.Table(SIM_TABLE)
+    response = table.update_item(
+        Key={
+            '_id': _id
+        },
+        UpdateExpression='SET instance_info.publicIpAddress = :ip',
+        ExpressionAttributeValues = {
+                    ':ip' : ip
+            },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return(response)
+
+def setStatus(_id, status):
+    table = dynamodb.Table(SIM_TABLE)
+    response = table.update_item(
+        Key={
+            '_id': _id
+        },
+        UpdateExpression='SET #status = :status',
+        ExpressionAttributeValues = {
+                    ':status' : status
+            },
+        ExpressionAttributeNames={
+            "#status" : status
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return(response)
 

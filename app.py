@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit
 import requests
 import awsGetters
 import boto3
-
+import X_Server_Init
 import numpy as np
 
 app = Flask(__name__)
@@ -51,7 +51,15 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
+    X_Server_Init.initXserver()
     instanceId = awsGetters.getInstanceId()
     publicIp = awsGetters.getPublicIp()
-    print(awsGetters.getSimulation(instanceId))
-    socketio.run(app, port=3000, host="0.0.0.0")
+    _id = awsGetters.getSimulationId("i-02a2ba4a9759c23b4")[0].get("_id", None)
+    simulation_info = None;
+    if _id is not None:
+        simulation_info = awsGetters.getSimulationInfo(_id)#TODO write this to a file
+        print(awsGetters.setPublicIp(_id, "buraya o ip gelecek!!"))
+        awsGetters.setStatus(_id, "pending2")
+
+
+    socketio.run(app, port=3003, host="0.0.0.0")
