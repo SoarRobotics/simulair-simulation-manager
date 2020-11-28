@@ -1,6 +1,6 @@
 import requests
 import boto3
-from boto3.dynamodb.conditons import Key
+from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 
