@@ -51,7 +51,7 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
-    X_Server_Init.initXserver()
+    X_Server_Init.isXserverRunning()
     instanceId = awsGetters.getInstanceId()
     publicIp = awsGetters.getPublicIp()
     _id = awsGetters.getSimulationId("i-02a2ba4a9759c23b4")[0].get("_id", None)
