@@ -53,7 +53,7 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
-    instance_initializer.getInstanceInfo()
+    instance_initializer.initialize()
     """
     result = instance_initializer.initialize()
     print(result)

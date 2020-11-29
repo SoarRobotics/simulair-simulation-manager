@@ -20,7 +20,6 @@ def getInstanceInfo():
         aws_utils.setPublicDnsName(_id, publicDnsName)
         aws_utils.setStatus(_id, "pending2")
         SimulationInfo = aws_utils.getSimulationInfo(_id)  # TODO write this to a file
-        print(SimulationInfo)
     return SimulationInfo
 
 async def run_x_server(timeout=20, delay=3):
@@ -38,12 +37,15 @@ async def run_x_server(timeout=20, delay=3):
 
 async def async_initialize():
     if SimulationInfo is not None:
-        await vpn_server_utils.initVpnServer(SimulationInfo)
+        await vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+        await asyncio.sleep(5)
+        await run_x_server()
+
 
 def initialize():
-    simInfo = getInstanceInfo()
+    getInstanceInfo()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(run_x_server())
+    loop.run_until_complete(async_initialize())
     loop.close()
     return result
 
