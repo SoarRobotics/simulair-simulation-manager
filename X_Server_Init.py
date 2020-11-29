@@ -1,5 +1,9 @@
-import subprocess
+import subprocess, signal, shlex
+
+XServerProcess = None
 
 def initXserver():
-    result = subprocess.run(['sudo /usr/bin/X :0 &', 'export DISPLAY=:0'], stdout=subprocess.PIPE)
-    print(result.stdout.decode('utf-8'))
+    global XServerProcess
+    XServerProcess = subprocess.Popen(shlex.split('sudo /usr/bin/X :0'), stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+

@@ -1,0 +1,6 @@
+import subprocess, signal
+
+def initXserver():
+    result = subprocess.Popen(['sudo /usr/bin/X', ':0', '&'], stdout=subprocess.PIPE, shell=True)
+    print("bişeyler")
+
