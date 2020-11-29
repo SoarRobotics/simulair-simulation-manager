@@ -11,7 +11,7 @@ def activateDisplay():
     if 'DISPLAY' in os.environ:
         os.environ['DISPLAY'] = os.environ['DISPLAY'] + ':' + ':0'
     else:
-        os.environ['LD_LIBRARY_PATH'] = ':0'
+        os.environ['DISPLAY'] = ':0'
 
 def isXserverRunning():
     p = subprocess.Popen(["xset", "-q"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
