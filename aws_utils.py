@@ -92,3 +92,5 @@ def setStatus(_id, status):
 
     return(response)
 
+def downloadAndSaveFile(file):
+    return None
