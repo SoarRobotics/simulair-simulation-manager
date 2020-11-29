@@ -85,7 +85,7 @@ def setStatus(_id, status):
                     ':status' : status
             },
         ExpressionAttributeNames={
-            "#status" : status
+            "#status" : "status"
         },
         ReturnValues="UPDATED_NEW"
     )

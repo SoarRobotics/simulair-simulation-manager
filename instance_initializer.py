@@ -37,7 +37,7 @@ async def run_x_server(timeout=20, delay=3):
 
 async def async_initialize():
     if SimulationInfo is not None:
-        await vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+        vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
         await asyncio.sleep(5)
         await run_x_server()
 
