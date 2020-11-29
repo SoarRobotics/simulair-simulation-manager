@@ -53,8 +53,11 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
+    instance_initializer.getInstanceInfo()
+    """
     result = instance_initializer.initialize()
     print(result)
+    """
     """
     instanceId = aws_utils.getInstanceId()
     publicIp = aws_utils.getPublicIp()
@@ -66,4 +69,6 @@ if __name__ == "__main__":
         aws_utils.setStatus(_id, "pending2")
 
     """
+    """
     socketio.run(app, port=3003, host="0.0.0.0")
+    """

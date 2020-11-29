@@ -4,11 +4,15 @@ from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 SIM_TABLE = 'simulair_simulations';
+
 def getInstanceId():
     return (requests.get("http://169.254.169.254/latest/meta-data/instance-id").text)
 
 def getPublicIp():
     return (requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").text)
+
+def getPublicDnsName():
+    return (requests.get("http://169.254.169.254/latest/meta-data/public-hostname").text)
 
 def getSimulationId(instance_id):
     table = dynamodb.Table(SIM_TABLE)
@@ -53,6 +57,22 @@ def setPublicIp(_id, ip):
     )
 
     return(response)
+
+def setPublicDnsName(_id, dnsName):
+    table = dynamodb.Table(SIM_TABLE)
+    response = table.update_item(
+        Key={
+            '_id': _id
+        },
+        UpdateExpression='SET instance_info.publicDnsName = :dns',
+        ExpressionAttributeValues = {
+                    ':dns' : dnsName
+            },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return(response)
+
 
 def setStatus(_id, status):
     table = dynamodb.Table(SIM_TABLE)

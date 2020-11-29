@@ -1,7 +1,10 @@
 import subprocess, signal, shlex, os
-import asyncio
-
+import config
 XServerProcess = None
+
+def getFirstLine():
+    with open(config.VPN_SERVER_CONFIG_PATH) as f:
+        print(f.readline())
 
 def initXserver():
     global XServerProcess
@@ -20,3 +23,6 @@ def isXserverRunning():
     return p.returncode == 0
 
 
+def terminateXserver():
+    if XServerProcess is not None:
+        XServerProcess.send_signal(signal.SIGTERM)
