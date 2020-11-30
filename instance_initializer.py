@@ -58,6 +58,8 @@ async def async_initialize():
 
 def initialize():
     getInstanceInfo()
-    asyncio.run(async_initialize())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(async_initialize())
+    loop.close()
     return result
 
