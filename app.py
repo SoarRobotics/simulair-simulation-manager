@@ -11,6 +11,10 @@ socketio = SocketIO(app)
 
 serverID = 'undefined'
 
+@app.before_first_request
+def your_function():
+    instance_initializer.initialize()
+
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -51,4 +55,5 @@ def onReceiveData(data):
 
 if __name__ == "__main__":
     instance_initializer.initialize()
+    print("I am")
     socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")
