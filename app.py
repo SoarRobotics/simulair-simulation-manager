@@ -1,7 +1,7 @@
-from flask import  Flask, render_template, request, redirect
+from flask import  Flask, render_template, request, redirect, jsonify
 from flask_socketio import SocketIO, emit
 import  config
-import instance_initializer
+import instance_initializer, manager
 
 
 app = Flask(__name__)
@@ -13,9 +13,15 @@ serverID = 'undefined'
 
 
 
+
 @app.route('/')
 def index():
     return render_template('home.html')
+
+@app.route('/new_credential/<user_id>')
+def new_cred(user_id):
+    r = manager.createVPNAccess(user_id)
+    return r
 
 @socketio.on("connect")
 def notify_connect():

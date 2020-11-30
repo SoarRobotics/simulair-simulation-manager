@@ -1,5 +1,5 @@
 import threading, time, x_server_utils, aws_utils, vpn_server_utils
-import config, simulair_core_utils
+import config, simulair_core_utils, state_manager
 
 SimulationInfo = None
 result = {
@@ -48,7 +48,9 @@ def run_demo_sim(socketIP):
 
 def async_initialize():
     if SimulationInfo is not None:
-        vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+        if state_manager.get("is_vpn_init") != None:
+            vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+            state_manager.set("is_vpn_init", True)
         time.sleep(3)
         run_x_server()
         time.sleep(3)

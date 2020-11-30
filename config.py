@@ -6,4 +6,7 @@ MANAGER_PORT="3003"
 PUBLIC_IP= None
 PUBLIC_DNS_NAME = None
 SIMULATION_ID = None
-
+STATE_PATH="~/.state"
+STATE_FILE="state.json"
+USER_RESOURCE_BUCKET_NAME="simulair-user-resources"
+GLOBAL_RESOURCE_BUCKET_NAME="simulair-global-resources"

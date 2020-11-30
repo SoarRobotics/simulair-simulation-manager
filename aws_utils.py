@@ -1,9 +1,14 @@
-import requests
+import requests, os
 import boto3
+import config, state_manager
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
-SIM_TABLE = 'simulair_simulations';
+s3 = boto3.resource('s3')
+user_resources_bucket = s3.Bucket(config.USER_RESOURCE_BUCKET_NAME)
+global_resources_bucket = s3.Bucket(config.GLOBAL_RESOURCE_BUCKET_NAME)
+SIM_TABLE = 'simulair_simulations'
+USER_ASSETS_TABLE = 'simulair-user-assets'
 
 def getInstanceId():
     return (requests.get("http://169.254.169.254/latest/meta-data/instance-id").text)
@@ -91,6 +96,58 @@ def setStatus(_id, status):
     )
 
     return(response)
+
+def setVpnCredAddress(user_id, sim_id, url):
+    table = dynamodb.Table(USER_ASSETS_TABLE)
+    scan = table.get_item(Key={
+        "_id": user_id,
+    })
+
+    new_data = None
+    for item, index in scan["simulations"]:
+        if item["sim_id"] == sim_id:
+            if "vpn_creds" in item:
+                item["vpn_creds"].append(url)
+            else:
+                item["vpn_cred"] = [url]
+
+            new_data[index] = item
+
+        if new_data is not None:
+            response = table.update_item(
+                Key={
+                    '_id': user_id
+                },
+                UpdateExpression='SET #simulations = :simulations',
+                ExpressionAttributeValues={
+                    ':simulations': new_data
+                },
+                ExpressionAttributeNames={
+                    "#simulations" : "simulations"
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+    return url
+
+
+def uploadFile(bucket, file_path, upload_name):
+    bucket.upload_file(
+        Filename=file_path,
+        Key=upload_name,
+        ExtraArgs={'ACL': 'public-read'}
+    )
+
+def uploadUserFile(file_path, user_id):
+    file_dir, file_name = os.path.split(file_path)
+    upload_name = getUserFolderName(user_id)+"/"+file_name
+    uploadFile(user_resources_bucket, file_path, upload_name)
+    return f"https://{config.USER_RESOURCE_BUCKET_NAME}.s3.amazonaws.com/{upload_name}"
+
+
+def getUserFolderName(user_id):
+    prefix = user_id[:5]
+    postfix = "-resource"
+    return prefix+postfix
 
 def downloadAndSaveFile(file):
     return None
