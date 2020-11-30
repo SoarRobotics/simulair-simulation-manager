@@ -52,8 +52,8 @@ async def async_initialize():
     if SimulationInfo is not None:
         vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
         await asyncio.sleep(5)
-        await run_x_server()
-        await  run_demo_sim(SimulationInfo["instance_info"]["publicIpAddress"])
+        await print(run_x_server())
+        ##await  run_demo_sim(SimulationInfo["instance_info"]["publicIpAddress"])
 
 
 def initialize():

@@ -20,7 +20,7 @@ def isXserverRunning():
     p = subprocess.Popen(["xset", "-q"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.communicate()
     print(p.returncode)
-    return p.returncode == 1
+    return p.returncode == 0
 
 
 def terminateXserver():
