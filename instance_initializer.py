@@ -51,10 +51,12 @@ def async_initialize():
         vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
         time.sleep(3)
         run_x_server()
+        time.sleep(3)
         run_demo_sim(SimulationInfo["instance_info"]["publicIpAddress"])
 
 
 def initialize():
+    getInstanceInfo()
     x = threading.Thread(target=async_initialize())
     x.start()
     return result
