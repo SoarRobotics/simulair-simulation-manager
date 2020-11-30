@@ -2,9 +2,6 @@ import subprocess, signal, shlex, os
 import config
 XServerProcess = None
 
-def getFirstLine():
-    with open(config.VPN_SERVER_CONFIG_PATH) as f:
-        print(f.readline())
 
 def initXserver():
     global XServerProcess

@@ -35,7 +35,7 @@ async def run_x_server(timeout=20, delay=3):
         else:
             x_server_utils.activateDisplay()
             return True
-        await asyncio.sleep(delay)
+        return await asyncio.sleep(delay)
     result["status"] = 400
     result["meta"]["message"] = "X server initialization failed";
     return False
@@ -44,7 +44,8 @@ async def run_demo_sim(socketIP):
     await asyncio.sleep(2)
     simulair_core_utils.initCoreProcess(config.DEMO_CORE_PATH, socketIP)
     setInstanceStatus("pending3")
-    await asyncio.sleep(10)
+    return await asyncio.sleep(10)
+
 
 
 
@@ -53,7 +54,7 @@ async def async_initialize():
         vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
         await asyncio.sleep(5)
         await run_x_server()
-        await  run_demo_sim(SimulationInfo["instance_info"]["publicIpAddress"])
+        return await  run_demo_sim(SimulationInfo["instance_info"]["publicIpAddress"])
 
 
 def initialize():
