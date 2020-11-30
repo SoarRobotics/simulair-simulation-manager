@@ -52,7 +52,7 @@ def async_initialize():
         time.sleep(3)
         run_x_server()
         time.sleep(3)
-        run_demo_sim(SimulationInfo["instance_info"]["publicIpAddress"])
+        run_demo_sim(SimulationInfo["instance_info"]["privateIpAddress"])
 
 
 def initialize():
