@@ -12,13 +12,12 @@ def createStateFile():
         return
     else:
         try:
-            os.mkdir(config.STATE_PATH)
-        except Exception:
-            pass
+            os.makedirs(os.path.join("/home/ubuntu/", ".state"))
+        except Exception as e:
+            print(e)
 
-    f = open(path, "a")
-    f.write("{}")
-    f.close()
+    with open(path, 'w') as fp:
+        fp.write("{}")
 
 def get(key):
     if checkIfExists():

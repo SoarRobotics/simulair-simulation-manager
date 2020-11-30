@@ -48,9 +48,7 @@ def run_demo_sim(socketIP):
 
 def async_initialize():
     if SimulationInfo is not None:
-        if state_manager.get("is_vpn_init") != None:
-            vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
-            state_manager.set("is_vpn_init", True)
+        vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
         time.sleep(3)
         run_x_server()
         time.sleep(3)
