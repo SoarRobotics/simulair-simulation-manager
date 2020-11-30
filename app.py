@@ -11,9 +11,7 @@ socketio = SocketIO(app)
 
 serverID = 'undefined'
 
-@app.before_first_request
-def your_function():
-    instance_initializer.initialize()
+
 
 @app.route('/')
 def index():
