@@ -37,3 +37,16 @@ def set(key, value):
     else:
         createStateFile()
         set(key, value)
+
+def delete(key):
+    if checkIfExists():
+        with open(path) as f:
+            data = json.load(f)
+            try:
+                del data[key]
+                with open(path, 'w') as outfile:
+                    json.dump(data, outfile)
+            except:
+                return
+    else:
+        return

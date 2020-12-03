@@ -1,14 +1,14 @@
-from flask import  Flask, render_template, request, redirect, jsonify
+from flask import  Flask, render_template, request, redirect, jsonify, make_response
 from flask_socketio import SocketIO, emit
 import  config
-import instance_initializer, manager
-
+import instance_initializer, manager, aws_utils, state_manager
+import requests
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
-
-
+simulair_web_api = "https://ju5x7v2aji.execute-api.eu-central-1.amazonaws.com/dev"
 serverID = 'undefined'
 
 
@@ -16,12 +16,42 @@ serverID = 'undefined'
 
 @app.route('/')
 def index():
-    return render_template('home.html')
+    userId = request.args.get("userId")
+    publicIp = instance_initializer.SimulationInfo["instance_info"]["publicIpAddress"]
+    publicDns = instance_initializer.SimulationInfo["instance_info"]["publicDnsName"]
+    return render_template('home.html', _userId=userId, _publicIp=publicIp, _publicDns=publicDns)
 
-@app.route('/new_credential/<user_id>')
-def new_cred(user_id):
-    r = manager.createVPNAccess(user_id)
-    return r
+def _build_cors_prelight_response():
+    response = make_response()
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add('Access-Control-Allow-Headers', "*")
+    response.headers.add('Access-Control-Allow-Methods', "*")
+    return response
+
+def _corsify_actual_response(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route('/new_credential', methods=["GET", "OPTIONS"])
+def new_cred():
+    if request.method == "OPTIONS":
+        return _build_cors_prelight_response()
+    elif request.method == "GET":
+        userId = request.args.get("userId")
+        print("user id is here amk senin oç piç.ç. {}".format(userId))
+        sim_id = instance_initializer.SimulationInfo["_id"]
+        if state_manager.get("initialized") is not None or state_manager.get("initialized") is not False:
+            cred_name = manager.createVpnCred(userId)
+            params = {
+                'userId' : userId,
+                "sim_id" : sim_id,
+                "cred_name" : cred_name
+            }
+            r = requests.get(simulair_web_api+"/vpn-red", params=params).content
+            print(r)
+            response = {"data " : "done"}
+            return _corsify_actual_response(jsonify("response"))
+        return ""
 
 @socketio.on("connect")
 def notify_connect():
@@ -58,5 +88,5 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
-     instance_initializer.initialize()
-     socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")
+    instance_initializer.initialize()
+    socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")

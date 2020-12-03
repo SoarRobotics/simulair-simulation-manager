@@ -1,6 +1,7 @@
 import subprocess, asyncio, shlex, os
-import config
+import config, state_manager
 
+MAX_ALLOWED_CRED_PER_USER = 3
 
 def initVpnServer(publicIp, privateIp):
     global VpnProcess
@@ -8,7 +9,14 @@ def initVpnServer(publicIp, privateIp):
                                   stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     vpnProcess.wait()
     out, error = vpnProcess.communicate()
-    print(out, error)
+    if error != b'':
+        print(error)
+        return False
+    else:
+        state_manager.set("vpn_initialized", True)
+        print("vpn service configured!")
+        return True
+        
 
 
 
@@ -17,7 +25,7 @@ def createClientCredential(name):
                                   stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     process.wait()
     out, error = process.communicate()
-    print(out, error)
+    print(error.decode("utf-8"))
 
 def isVpnServerRunning():
     stat = os.system('sudo systemctl status openvpn-server@server.service > /dev/null')

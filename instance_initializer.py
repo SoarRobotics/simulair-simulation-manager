@@ -1,7 +1,7 @@
 import threading, time, x_server_utils, aws_utils, vpn_server_utils
 import config, simulair_core_utils, state_manager
 
-SimulationInfo = None
+SimulationInfo = {"_id" : "2f370ff0-3040-11eb-9e8e-7d37a30c8bc0"}
 result = {
     "status" : None,
     "meta" : {
@@ -27,7 +27,7 @@ def setInstanceStatus(status):
         aws_utils.setStatus(SimulationInfo["_id"], status)
 
 
-def run_x_server(timeout=20, delay=2):
+def run_x_server(timeout=6, delay=2):
     loop_count = timeout // delay
     for i in range(0, loop_count):
         if not x_server_utils.isXserverRunning():
@@ -37,7 +37,7 @@ def run_x_server(timeout=20, delay=2):
             return True
         time.sleep(delay)
     result["status"] = 400
-    result["meta"]["message"] = "X server initialization failed";
+    result["meta"]["message"] = "X server initialization failed"
     return False
 
 def run_demo_sim(socketIP):
@@ -47,17 +47,21 @@ def run_demo_sim(socketIP):
     time.sleep(3)
 
 def async_initialize():
+    state_manager.set("initialized", False)
     if SimulationInfo is not None:
-        vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
-        time.sleep(3)
-        run_x_server()
-        time.sleep(3)
+        if state_manager.get("vpn_initialized") is None:
+            vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+            time.sleep(3)
+            state_manager.set("vpn_initialized", True)
+        #run_x_server()
+        #time.sleep(3)
         run_demo_sim(SimulationInfo["instance_info"]["privateIpAddress"])
+        state_manager.set("initialized", True)
 
 
 def initialize():
     getInstanceInfo()
     x = threading.Thread(target=async_initialize())
     x.start()
-    return result
+    return x
 

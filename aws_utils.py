@@ -1,6 +1,6 @@
 import requests, os
 import boto3
-import config, state_manager
+import config, state_manager, vpn_server_utils
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
@@ -40,13 +40,70 @@ def getSimulationId(instance_id):
 
     return response
 
-def getSimulationInfo(_id):
+
+def getSimulationInfo(simId):
     table = dynamodb.Table(SIM_TABLE)
 
     response = table.get_item(Key={
-        "_id": _id,
+        "_id": simId,
     })
     return response.get("Item", None)
+
+def getUserInfo(userId):
+    table = dynamodb.Table(USER_ASSETS_TABLE)
+    response = table.get_item(Key={
+        "_id": userId,
+    })
+    return response.get("Item", None)
+
+def addNewCredToUser(userId, simId, name, url):
+    index = _checkIfUserEligible(userId, simId)
+    print(index)
+    if index is None:
+        raise Exception("Not Authorized!")
+
+    table = dynamodb.Table(USER_ASSETS_TABLE)
+    updateExp = "SET simulations[{}].vpn_credentials = :item".format(index[0]) #create if doesn't exist
+    if index[1] != 0:
+        updateExp = "SET simulations[{}].vpn_credentials = list_append(simulations[{}].vpn_credentials, :item)".format(index[0], index[0])
+    
+    response = table.update_item(
+        Key={
+            '_id': userId
+        },
+        UpdateExpression=updateExp,
+        ExpressionAttributeValues = {
+                    ':item' : [{ "name" : name, "url":url}]
+            }, 
+        ReturnValues="UPDATED_NEW"
+    )
+
+def _checkIfUserEligible(userId, simId):
+    a = getUserInfo(userId)
+    if a is None:
+        return None
+    index = getIndexOfSim(a["simulations"], simId)
+    if index is None:
+        return None
+    try:
+        creds_list = a["simulations"][index]["vpn_credentials"]
+        if len(creds_list) <= vpn_server_utils.MAX_ALLOWED_CRED_PER_USER:
+            return (index, len(creds_list))
+        else :
+            return None
+    except KeyError:
+        return (index, 0)
+    return None
+
+
+def getIndexOfSim(simList, simId):
+    for sim in simList:
+        if sim["sim_id"] == simId:
+            return simList.index(sim)  
+
+    return None
+
+    
 
 def setPublicIp(_id, ip):
     table = dynamodb.Table(SIM_TABLE)
@@ -96,38 +153,6 @@ def setStatus(_id, status):
     )
 
     return(response)
-
-def setVpnCredAddress(user_id, sim_id, url):
-    table = dynamodb.Table(USER_ASSETS_TABLE)
-    scan = table.get_item(Key={
-        "_id": user_id,
-    })
-
-    new_data = None
-    for item, index in scan["simulations"]:
-        if item["sim_id"] == sim_id:
-            if "vpn_creds" in item:
-                item["vpn_creds"].append(url)
-            else:
-                item["vpn_cred"] = [url]
-
-            new_data[index] = item
-
-        if new_data is not None:
-            response = table.update_item(
-                Key={
-                    '_id': user_id
-                },
-                UpdateExpression='SET #simulations = :simulations',
-                ExpressionAttributeValues={
-                    ':simulations': new_data
-                },
-                ExpressionAttributeNames={
-                    "#simulations" : "simulations"
-                },
-                ReturnValues="UPDATED_NEW"
-            )
-    return url
 
 
 def uploadFile(bucket, file_path, upload_name):
