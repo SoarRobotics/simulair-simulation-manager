@@ -53,8 +53,8 @@ def async_initialize():
             vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
             time.sleep(3)
             state_manager.set("vpn_initialized", True)
-        #run_x_server()
-        #time.sleep(3)
+        run_x_server()
+        time.sleep(3)
         run_demo_sim(SimulationInfo["instance_info"]["privateIpAddress"])
         state_manager.set("initialized", True)
 
