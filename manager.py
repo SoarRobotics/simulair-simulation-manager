@@ -25,7 +25,6 @@ def createVpnCred(user_id):
     vpn_server_utils.createClientCredential(name)
     time.sleep(1) #wait some
     a = aws_utils.uploadUserFile(config.VPN_CREDENTIALS_DIR+"/"+name+".ovpn", user_id)
-    print("here is your fucking credential bitch oç ?^+%34. {}".format(instance_initializer.SimulationInfo["_id"]))
     aws_utils.addNewCredToUser(user_id, instance_initializer.SimulationInfo["_id"], name, a)
     return name
 

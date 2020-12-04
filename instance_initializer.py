@@ -1,4 +1,4 @@
-import threading, time, x_server_utils, aws_utils, vpn_server_utils
+import threading, time, x_server_utils, aws_utils, vpn_server_utils, subprocess
 import config, simulair_core_utils, state_manager
 
 SimulationInfo = {"_id" : "2f370ff0-3040-11eb-9e8e-7d37a30c8bc0"}
