@@ -90,3 +90,7 @@ def onReceiveData(data):
 if __name__ == "__main__":
     instance_initializer.initialize()
     socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")
+
+
+
+#
