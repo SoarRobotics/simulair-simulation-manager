@@ -28,5 +28,10 @@ def createVpnCred(user_id):
     aws_utils.addNewCredToUser(user_id, instance_initializer.SimulationInfo["_id"], name, a)
     return name
 
-
-
+def dispatchLogFile(sim_id):
+    #last_index = state_manager.get("last_created_cred_index")
+    #name="default"
+    time.sleep(1) #wait some
+    a = aws_utils.uploadLogFile(sim_id)
+    aws_utils.addNewCredToUser(user_id, instance_initializer.SimulationInfo["_id"], name, a)
+    return name

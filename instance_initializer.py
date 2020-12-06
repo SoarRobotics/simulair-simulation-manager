@@ -1,5 +1,5 @@
 import threading, time, x_server_utils, aws_utils, vpn_server_utils, subprocess
-import config, simulair_core_utils, state_manager
+import config, simulair_core_utils, state_manager, log_manager
 
 SimulationInfo = {"_id" : "2f370ff0-3040-11eb-9e8e-7d37a30c8bc0"}
 result = {
@@ -20,11 +20,15 @@ def getInstanceInfo():
         aws_utils.setPublicDnsName(_id, publicDnsName)
         setInstanceStatus("pending2")
         SimulationInfo = aws_utils.getSimulationInfo(_id)  # TODO write this to a file
+        log_manager.writeLogLine("Simulation info has received: {}".format(SimulationInfo["_id"]))
     return SimulationInfo
 
 def setInstanceStatus(status):
     if SimulationInfo is not None:
         aws_utils.setStatus(SimulationInfo["_id"], status)
+        log_manager.writeLogLine("The instance state has updated to '{}'".format(status))
+    else :
+        log_manager.writeLogLine("The instance state has updated to '{}'".format(status))
 
 
 def run_demo_sim(socketIP):

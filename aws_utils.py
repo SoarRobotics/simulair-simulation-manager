@@ -168,10 +168,19 @@ def uploadUserFile(file_path, user_id):
     uploadFile(user_resources_bucket, file_path, upload_name)
     return f"https://{config.USER_RESOURCE_BUCKET_NAME}.s3.amazonaws.com/{upload_name}"
 
+def uploadLogFile(sim_id):
+    upload_name = getSimFolderName(sim_id)+"/logs/log"
+    uploadFile(user_resources_bucket, config.LOG_DIR, upload_name)
+    return f"https://{config.GLOBAL_RESOURCE_BUCKET_NAME}.s3.amazonaws.com/{upload_name}"
 
 def getUserFolderName(user_id):
-    prefix = user_id[:5]
+    prefix = user_id
     postfix = "-resource"
+    return prefix+postfix
+
+def getSimFolderName(sim_id):
+    prefix = sim_id
+    postfix = "-data"
     return prefix+postfix
 
 def downloadAndSaveFile(file):

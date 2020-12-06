@@ -10,3 +10,4 @@ STATE_PATH="/home/ubuntu/.state"
 STATE_FILE="state.json"
 USER_RESOURCE_BUCKET_NAME="simulair-user-resources"
 GLOBAL_RESOURCE_BUCKET_NAME="simulair-global-resources"
+LOG_DIR='/home/ubuntu/.simlogs/log'
