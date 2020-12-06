@@ -14,7 +14,7 @@ def activateDisplay():
         os.environ['DISPLAY'] = ':0'
 
 def isXserverRunning():
-    p = subprocess.Popen(["xset", "-q"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(["pgrep Xorg"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     p.communicate()
     return p.returncode == 0
 

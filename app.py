@@ -1,7 +1,7 @@
 from flask import  Flask, render_template, request, redirect, jsonify, make_response
 from flask_socketio import SocketIO, emit
 import  config
-import instance_initializer, manager, aws_utils, state_manager, simulair_core_utils, x_server_utils, time
+import instance_initializer, manager, aws_utils, state_manager, simulair_core_utils, x_server_utils, time, vpn_server_utils
 import requests
 import json
 
@@ -10,8 +10,6 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 simulair_web_api = "https://ju5x7v2aji.execute-api.eu-central-1.amazonaws.com/dev"
 serverID = 'undefined'
-
-
 
 
 @app.route('/')
@@ -88,8 +86,9 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
-    instance_initializer.initialize()
-    socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")
+    print()
+    #instance_initializer.initialize()
+    #socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")
 
 
 

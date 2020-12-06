@@ -27,35 +27,23 @@ def setInstanceStatus(status):
         aws_utils.setStatus(SimulationInfo["_id"], status)
 
 
-def run_x_server(timeout=6, delay=2):
-    loop_count = timeout // delay
-    for i in range(0, loop_count):
-        if not x_server_utils.isXserverRunning():
-            x_server_utils.initXserver()
-        else:
-            x_server_utils.activateDisplay()
-            return True
-        time.sleep(delay)
-    result["status"] = 400
-    result["meta"]["message"] = "X server initialization failed"
-    return False
-
 def run_demo_sim(socketIP):
     time.sleep(2)
     simulair_core_utils.initCoreProcess(config.DEMO_CORE_PATH, socketIP)
-    setInstanceStatus("pending3")
     time.sleep(3)
 
+
+
 def async_initialize():
+    setInstanceStatus("pending1")
     state_manager.set("initialized", False)
     if SimulationInfo is not None:
-        if state_manager.get("vpn_initialized") is None:
-            vpn_server_utils.initVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+        if not vpn_server_utils.isVpnServerInstalled():
+            vpn_server_utils.installVpnServer(SimulationInfo["instance_info"]["publicIpAddress"], SimulationInfo["instance_info"]["privateIpAddress"])
+            setInstanceStatus("pending2")
             time.sleep(3)
-            state_manager.set("vpn_initialized", True)
-        #run_x_server()
-        time.sleep(3)
         run_demo_sim(SimulationInfo["instance_info"]["privateIpAddress"])
+        setInstanceStatus("pending3")
         state_manager.set("initialized", True)
 
 
