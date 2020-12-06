@@ -78,6 +78,19 @@ def addNewCredToUser(userId, simId, name, url):
         ReturnValues="UPDATED_NEW"
     )
 
+def addLogToSim(sim_id, url):
+    table = dynamodb.Table(SIM_TABLE)
+    updateExp = "SET log_file = :item" #create if doesn't exist
+    response = table.update_item(
+        Key={
+            '_id': sim_id
+        },
+        UpdateExpression=updateExp,
+        ExpressionAttributeValues = {
+                    ':item' : url
+            }, 
+        ReturnValues="UPDATED_NEW"
+
 def _checkIfUserEligible(userId, simId):
     a = getUserInfo(userId)
     if a is None:
