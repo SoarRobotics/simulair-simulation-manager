@@ -1,0 +1,178 @@
+import requests, os
+import boto3
+import config, state_manager, vpn_server_utils
+from boto3.dynamodb.conditions import Key
+
+dynamodb = boto3.resource('dynamodb')
+s3 = boto3.resource('s3')
+user_resources_bucket = s3.Bucket(config.USER_RESOURCE_BUCKET_NAME)
+global_resources_bucket = s3.Bucket(config.GLOBAL_RESOURCE_BUCKET_NAME)
+SIM_TABLE = 'simulair_simulations'
+USER_ASSETS_TABLE = 'simulair-user-assets'
+
+def getInstanceId():
+    return (requests.get("http://169.254.169.254/latest/meta-data/instance-id").text)
+
+def getPublicIp():
+    return (requests.get("http://169.254.169.254/latest/meta-data/public-ipv4").text)
+
+def getPublicDnsName():
+    return (requests.get("http://169.254.169.254/latest/meta-data/public-hostname").text)
+
+def getSimulationId(instance_id):
+    table = dynamodb.Table(SIM_TABLE)
+    scan_kwargs = {
+        "FilterExpression" : Key('instanceId').eq(instance_id),
+        "ProjectionExpression" : "#id",
+        "ExpressionAttributeNames" : {"#id" : "_id"}
+    }
+
+    done = False
+    start_key = None
+    response = []
+    while not done:
+        if start_key:
+            scan_kwargs['ExclusiveStartKey'] = start_key
+        temp_response = table.scan(**scan_kwargs)
+        start_key = temp_response.get("LastEvaluatedKey", None)
+        response += temp_response.get("Items", None)
+        done = start_key is None
+
+    return response
+
+
+def getSimulationInfo(simId):
+    table = dynamodb.Table(SIM_TABLE)
+
+    response = table.get_item(Key={
+        "_id": simId,
+    })
+    return response.get("Item", None)
+
+def getUserInfo(userId):
+    table = dynamodb.Table(USER_ASSETS_TABLE)
+    response = table.get_item(Key={
+        "_id": userId,
+    })
+    return response.get("Item", None)
+
+def addNewCredToUser(userId, simId, name, url):
+    index = _checkIfUserEligible(userId, simId)
+    print(index)
+    if index is None:
+        raise Exception("Not Authorized!")
+
+    table = dynamodb.Table(USER_ASSETS_TABLE)
+    updateExp = "SET simulations[{}].vpn_credentials = :item".format(index[0]) #create if doesn't exist
+    if index[1] != 0:
+        updateExp = "SET simulations[{}].vpn_credentials = list_append(simulations[{}].vpn_credentials, :item)".format(index[0], index[0])
+    
+    response = table.update_item(
+        Key={
+            '_id': userId
+        },
+        UpdateExpression=updateExp,
+        ExpressionAttributeValues = {
+                    ':item' : [{ "name" : name, "url":url}]
+            }, 
+        ReturnValues="UPDATED_NEW"
+    )
+
+def _checkIfUserEligible(userId, simId):
+    a = getUserInfo(userId)
+    if a is None:
+        return None
+    index = getIndexOfSim(a["simulations"], simId)
+    if index is None:
+        return None
+    try:
+        creds_list = a["simulations"][index]["vpn_credentials"]
+        if len(creds_list) <= vpn_server_utils.MAX_ALLOWED_CRED_PER_USER:
+            return (index, len(creds_list))
+        else :
+            return None
+    except KeyError:
+        return (index, 0)
+    return None
+
+
+def getIndexOfSim(simList, simId):
+    for sim in simList:
+        if sim["sim_id"] == simId:
+            return simList.index(sim)  
+
+    return None
+
+    
+
+def setPublicIp(_id, ip):
+    table = dynamodb.Table(SIM_TABLE)
+    response = table.update_item(
+        Key={
+            '_id': _id
+        },
+        UpdateExpression='SET instance_info.publicIpAddress = :ip',
+        ExpressionAttributeValues = {
+                    ':ip' : ip
+            },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return(response)
+
+def setPublicDnsName(_id, dnsName):
+    table = dynamodb.Table(SIM_TABLE)
+    response = table.update_item(
+        Key={
+            '_id': _id
+        },
+        UpdateExpression='SET instance_info.publicDnsName = :dns',
+        ExpressionAttributeValues = {
+                    ':dns' : dnsName
+            },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return(response)
+
+
+def setStatus(_id, status):
+    table = dynamodb.Table(SIM_TABLE)
+    response = table.update_item(
+        Key={
+            '_id': _id
+        },
+        UpdateExpression='SET #status = :status',
+        ExpressionAttributeValues = {
+                    ':status' : status
+            },
+        ExpressionAttributeNames={
+            "#status" : "status"
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return(response)
+
+
+def uploadFile(bucket, file_path, upload_name):
+    bucket.upload_file(
+        Filename=file_path,
+        Key=upload_name,
+        ExtraArgs={'ACL': 'public-read'}
+    )
+
+def uploadUserFile(file_path, user_id):
+    file_dir, file_name = os.path.split(file_path)
+    upload_name = getUserFolderName(user_id)+"/"+file_name
+    uploadFile(user_resources_bucket, file_path, upload_name)
+    return f"https://{config.USER_RESOURCE_BUCKET_NAME}.s3.amazonaws.com/{upload_name}"
+
+
+def getUserFolderName(user_id):
+    prefix = user_id[:5]
+    postfix = "-resource"
+    return prefix+postfix
+
+def downloadAndSaveFile(file):
+    return None
