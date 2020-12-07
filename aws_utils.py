@@ -1,10 +1,12 @@
-import requests, os
+import requests, os, subprocess
 import boto3
 import config, state_manager, vpn_server_utils
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.resource('s3')
+s3_client = boto3.client('s3')
+
 user_resources_bucket = s3.Bucket(config.USER_RESOURCE_BUCKET_NAME)
 global_resources_bucket = s3.Bucket(config.GLOBAL_RESOURCE_BUCKET_NAME)
 SIM_TABLE = 'simulair_simulations'
@@ -89,7 +91,8 @@ def addLogToSim(sim_id, url):
         ExpressionAttributeValues = {
                     ':item' : url
             }, 
-        ReturnValues="UPDATED_NEW"
+        ReturnValues="UPDATED_NEW")
+
 
 def _checkIfUserEligible(userId, simId):
     a = getUserInfo(userId)
@@ -196,5 +199,21 @@ def getSimFolderName(sim_id):
     postfix = "-data"
     return prefix+postfix
 
-def downloadAndSaveFile(file):
-    return None
+def downloadAndSaveEnvironment(env_id):
+    try :
+        global_resources_bucket.download_file("environments/"+env_id, config.CORE_PATH+"/"+env_id+".tar.xz")
+        set_val = (state_manager.get("downloaded_environments") == None) and [env_id] or (state_manager.get("downloaded_environments") + [env_id])
+        state_manager.set("downloaded_environments", set_val)
+    except Exception as e:
+        print(e)
+        return False
+    p = subprocess.Popen("tar -xf " + config.CORE_PATH+"/"+env_id+".tar.xz", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    p.communicate()
+    if p.returncode != 0:
+        return False
+    p = subprocess.Popen("rm " + config.CORE_PATH+"/"+env_id+".tar.xz", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    p.communicate()
+    if p.returncode != 0:
+        return False
+    return True
+    
