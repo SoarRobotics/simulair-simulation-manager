@@ -207,7 +207,7 @@ def downloadAndSaveEnvironment(env_id):
     except Exception as e:
         print(e)
         return False
-    p = subprocess.Popen("tar -xf " + config.CORE_PATH+"/"+env_id+".tar.xz", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    p = subprocess.Popen("tar -xf " + config.CORE_PATH+"/"+env_id+".tar.xz -C "+ config.CORE_PATH+"/", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     p.communicate()
     if p.returncode != 0:
         return False
