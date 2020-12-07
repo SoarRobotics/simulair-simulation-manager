@@ -17,16 +17,10 @@ def installVpnServer(publicIp, privateIp):
         print("vpn service configured!")
         return True       
 
-def isVpnServerInstalled():
-    p = subprocess.Popen(["service openvpn-server@server status > /dev/null"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    p.communicate()
-    return p.returncode == 0
-
     
 def createClientCredential(name):
     process = subprocess.Popen(shlex.split('sudo bash ' + config.BASH_SCRIPTS_DIR + "/create_user.sh --userName={}".format(name)),
                                   stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    process.wait()
     out, error = process.communicate()
     print(error.decode("utf-8"))
 
@@ -34,3 +28,23 @@ def isVpnServerRunning():
     stat = os.system('sudo systemctl status openvpn-server@server.service > /dev/null')
     return stat == 0
 
+def isVpnServerInstalled():
+    p = subprocess.Popen("service openvpn-server@server status > /dev/null", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    p.communicate()
+    return ((p.returncode == 0) or (p.returncode == 3))
+
+def stopVpnServer():
+    if isVpnServerInstalled():
+        p = subprocess.Popen("sudo systemctl stop openvpn-server@server.service > /dev/null", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        p.communicate()
+        return (p.returncode == 0)
+    else:
+        return True
+
+def startVpnServer():
+    if isVpnServerInstalled():
+        p = subprocess.Popen("sudo systemctl start openvpn-server@server.service > /dev/null", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        p.communicate()
+        return (p.returncode == 0)
+    else: 
+        return True

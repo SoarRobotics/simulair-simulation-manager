@@ -1,10 +1,12 @@
-import requests, os
+import requests, os, subprocess
 import boto3
 import config, state_manager, vpn_server_utils
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.resource('s3')
+s3_client = boto3.client('s3')
+
 user_resources_bucket = s3.Bucket(config.USER_RESOURCE_BUCKET_NAME)
 global_resources_bucket = s3.Bucket(config.GLOBAL_RESOURCE_BUCKET_NAME)
 SIM_TABLE = 'simulair_simulations'
@@ -77,6 +79,20 @@ def addNewCredToUser(userId, simId, name, url):
             }, 
         ReturnValues="UPDATED_NEW"
     )
+
+def addLogToSim(sim_id, url):
+    table = dynamodb.Table(SIM_TABLE)
+    updateExp = "SET log_file = :item" #create if doesn't exist
+    response = table.update_item(
+        Key={
+            '_id': sim_id
+        },
+        UpdateExpression=updateExp,
+        ExpressionAttributeValues = {
+                    ':item' : url
+            }, 
+        ReturnValues="UPDATED_NEW")
+
 
 def _checkIfUserEligible(userId, simId):
     a = getUserInfo(userId)
@@ -168,11 +184,36 @@ def uploadUserFile(file_path, user_id):
     uploadFile(user_resources_bucket, file_path, upload_name)
     return f"https://{config.USER_RESOURCE_BUCKET_NAME}.s3.amazonaws.com/{upload_name}"
 
+def uploadLogFile(sim_id):
+    upload_name = getSimFolderName(sim_id)+"/logs/log"
+    uploadFile(user_resources_bucket, config.LOG_DIR, upload_name)
+    return f"https://{config.GLOBAL_RESOURCE_BUCKET_NAME}.s3.amazonaws.com/{upload_name}"
 
 def getUserFolderName(user_id):
-    prefix = user_id[:5]
+    prefix = user_id
     postfix = "-resource"
     return prefix+postfix
 
-def downloadAndSaveFile(file):
-    return None
+def getSimFolderName(sim_id):
+    prefix = sim_id
+    postfix = "-data"
+    return prefix+postfix
+
+def downloadAndSaveEnvironment(env_id):
+    try :
+        global_resources_bucket.download_file("environments/"+env_id, config.CORE_PATH+"/"+env_id+".tar.xz")
+        set_val = (state_manager.get("downloaded_environments") == None) and [env_id] or (state_manager.get("downloaded_environments") + [env_id])
+        state_manager.set("downloaded_environments", set_val)
+    except Exception as e:
+        print(e)
+        return False
+    p = subprocess.Popen("tar -xf " + config.CORE_PATH+"/"+env_id+".tar.xz", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    p.communicate()
+    if p.returncode != 0:
+        return False
+    p = subprocess.Popen("rm " + config.CORE_PATH+"/"+env_id+".tar.xz", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    p.communicate()
+    if p.returncode != 0:
+        return False
+    return True
+    
