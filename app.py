@@ -1,7 +1,7 @@
 from flask import  Flask, render_template, request, redirect, jsonify, make_response
 from flask_socketio import SocketIO, emit
 import config
-#import manager, aws_utils, state_manager, simulair_core_utils, x_server_utils, time, vpn_server_utils, log_manager
+import manager, aws_utils, state_manager, simulair_core_utils, x_server_utils, time, vpn_server_utils, log_manager
 import requests
 import json
 
@@ -14,10 +14,10 @@ serverID = 'undefined'
 
 @app.route('/')
 def index():
-    # userId = request.args.get("userId")
-    # publicIp = manager.SimulationInfo["instance_info"]["publicIpAddress"]
-    # publicDns = manager.SimulationInfo["instance_info"]["publicDnsName"]
-    return render_template('home.html')# _userId=userId, _publicIp=publicIp, _publicDns=publicDns)
+    userId = request.args.get("userId")
+    publicIp = manager.SimulationInfo["instance_info"]["publicIpAddress"]
+    publicDns = manager.SimulationInfo["instance_info"]["publicDnsName"]
+    return render_template('home.html', _userId=userId, _publicIp=publicIp, _publicDns=publicDns)
 
 def _build_cors_prelight_response():
     response = make_response()
@@ -30,38 +30,30 @@ def _corsify_actual_response(response):
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
-# @app.route('/new_credential', methods=["GET", "OPTIONS"])
-# def new_cred():
-#     if request.method == "OPTIONS":
-#         return _build_cors_prelight_response()
-#     elif request.method == "GET":
-#         userId = request.args.get("userId")
-#         sim_id = manager.SimulationInfo["_id"]
-#         if state_manager.get("initialized") is not None or state_manager.get("initialized") is not False:
-#             cred_name = manager.createVpnCred(userId)
-#             params = {
-#                 'userId' : userId,
-#                 "sim_id" : sim_id,
-#                 "cred_name" : cred_name
-#             }
-#             r = requests.get(simulair_web_api+"/vpn-red", params=params).content
-#             print(r)
-#             response = {"data " : "done"}
-#             return _corsify_actual_response(jsonify("response"))
-#         return ""
-
-@app.route('/simulation/stop',methods = ["PATCH","OPTIONS"])
-def deneme():
-    if request.method == "OPTIONS":
-        return _build_cors_prelight_response()
-    elif request.method == "PATCH":
-        print("Closing sim")
-        return _corsify_actual_response(jsonify("response"))
+@app.route('/new_credential', methods=["GET", "OPTIONS"])
+def new_cred():
+     if request.method == "OPTIONS":
+         return _build_cors_prelight_response()
+     elif request.method == "GET":
+         userId = request.args.get("userId")
+         sim_id = manager.SimulationInfo["_id"]
+         if state_manager.get("initialized") is not None or state_manager.get("initialized") is not False:
+             cred_name = manager.createVpnCred(userId)
+             params = {
+                 'userId' : userId,
+                 "sim_id" : sim_id,
+                 "cred_name" : cred_name
+             }
+             r = requests.get(simulair_web_api+"/vpn-red", params=params).content
+             print(r)
+             response = {"data " : "done"}
+             return _corsify_actual_response(jsonify("response"))
+         return ""
 
 @socketio.on("connect")
 def notify_connect():
-    # for line in log_manager.getLogFile():
-    #     log_manager.broadcastLine(line)
+    for line in log_manager.getLogFile():
+        log_manager.broadcastLine(line)
     emit("connection-accepted", {"connected": True})
     print("a user is connected: {} (server: {} )".format(request.sid, serverID))
 
@@ -78,7 +70,7 @@ def disconnect():
 def regServerId():
     global serverID
     serverID = request.sid
-    # manager.setInstanceStatus("running")
+    manager.setInstanceStatus("running")
     print("reg server id : {} ".format(serverID))
 
 @socketio.on('OnReceiveData')
@@ -95,4 +87,6 @@ def onReceiveData(data):
 
 
 if __name__ == "__main__":
+    manager.resetInstance()
+    manager.initialize()
     socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")

@@ -1,11 +1,17 @@
- import threading, time, subprocess 
+import threading, time, subprocess 
 import config, simulair_core_utils, state_manager, log_manager, x_server_utils, aws_utils, vpn_server_utils
 
 
 
-SimulationInfo = {}
+SimulationInfo = None
+result = {
+    "status" : None,
+    "meta" : {
+        "message" : None
+    }
+}
 
-def getInstanceInfo(): #
+def getInstanceInfo(): 
     instanceId = aws_utils.getInstanceId()
     publicIp = aws_utils.getPublicIp()
     publicDnsName = aws_utils.getPublicDnsName()
@@ -68,15 +74,6 @@ def initialize():
     return x
 
 
-SimulationInfo = None
-result = {
-    "status" : None,
-    "meta" : {
-        "message" : None
-    }
-}
-
-
 def createVpnCred(user_id):
     
     last_index = state_manager.get("last_created_cred_index")
@@ -108,6 +105,7 @@ def freeManagerPort():
     p = subprocess.Popen("sudo fuser -n tcp -k " + config.MANAGER_PORT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     p.communicate()
     return p.returncode == 0
+
 ##this method reset everything except for the vpn server
 def resetInstance():
     setInstanceStatus("pending2") #instance is initialized but modules are not initialized
