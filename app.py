@@ -90,3 +90,4 @@ if __name__ == "__main__":
     manager.resetInstance()
     manager.initialize()
     socketio.run(app, port=int(config.MANAGER_PORT), host="0.0.0.0")
+    # test instance initialization: This line is added for testing if the simulation can start without user credentials. 
